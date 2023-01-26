@@ -1,5 +1,6 @@
 <script setup>
 import { reactive } from 'vue';
+import axios from 'axios';
 
 const joke = reactive({
   isLoading: true,
@@ -57,28 +58,35 @@ const language = reactive({
 
 function getNewJoke() {
   joke.fatal = false
-  fetch(`https://v2.jokeapi.dev/joke/${type.selected}?lang=${language.selected}&type=twopart`)
-    .then(res => res.json())
-    .then(data => {
-      if (data.error) {
+  axios.get(`https://v2.jokeapi.dev/joke/${type.selected}?lang=${language.selected}&type=twopart`)
+    .then(res => {
+      console.log(res.data);
+      if (res.data.error) {
         type.selected = 'Any'
         language.selected = 'en'
-        joke.error = data.message
+        joke.error = res.data.message
         getNewJoke()
       }
-      if (data.id === joke.id || data.id === undefined) {
+      if (res.data.id === joke.id || res.data.id === undefined) {
         getNewJoke()
       } else {
-        joke.question = data.setup
-        joke.answer = data.delivery
-        joke.id = data.id
+        joke.question = res.data.setup
+        joke.answer = res.data.delivery
+        joke.id = res.data.id
         joke.isSet = true
         joke.isLoading = false
         joke.isCompleteJoke = false
       }
     })
     .catch(err => {
-      joke.error = `FATAL ERROR:\n${err}\ncheck if api doesn't work anymore`
+      console.log(err);
+      if (err.code === 'ERR_BAD_REQUEST') {
+        joke.error = `FATAL ERROR: ${err.response.data.additionalInfo}`
+      }
+      if (err.code === 'ERR_NETWORK') {
+        joke.error = `FATAL ERROR: ${err.message}`
+      }
+      // joke.error = `FATAL ERROR: ${err}`
       joke.fatal = true
     })
 }
@@ -109,14 +117,7 @@ function getLanguage() {
 </script>
 
 <template>
-  <div class="w-full h-90vh flex flex-col justify-start gap-10 items-center p-3">
-    <!-- ///////////////// Title ///////////////// -->
-
-    <div>
-      <h1 class="text-3xl font-bold">Get a joke</h1>
-      <p class="">By <a href="#" class="text-lg text-gray-500 font-medium">arnaugra</a></p>
-    </div>
-
+  <div class="w-full flex flex-col justify-start gap-10 items-center py-3">
     <!-- ///////////////// Joke ///////////////// -->
 
     <div id="container" class="bg-gray-200 p-5 rounded w-80 h-auto flex flex-col gap-5">
