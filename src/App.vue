@@ -1,6 +1,9 @@
 <script setup>
-import { reactive } from 'vue';
-import axios from 'axios';
+import ConfigSelect from './components/CustomConfigSelect.vue'
+import CustomButton from './components/CustomButton.vue';
+
+import { reactive } from 'vue'
+import axios from 'axios'
 
 const joke = reactive({
   isLoading: true,
@@ -16,13 +19,34 @@ const joke = reactive({
 const type = reactive({
   selected: 'Any',
   types: {
-    Any: 'Any',
-    Programming: 'Programming',
-    Misc: 'Misc',
-    Dark: 'Dark',
-    Pun: 'Pun',
-    Spooky: 'Spooky',
-    Christmas: 'Christmas',
+    Any: {
+      name: 'Any',
+      value: 'Any',
+    },
+    Programming: {
+      name: 'Programming',
+      value: 'Programming',
+    },
+    Misc: {
+      name: 'Misc',
+      value: 'Misc',
+    },
+    Dark: {
+      name: 'Dark',
+      value: 'Dark',
+    },
+    Pun: {
+      name: 'Pun',
+      value: 'Pun',
+    },
+    Spooky: {
+      name: 'Spooky',
+      value: 'Spooky',
+    },
+    Christmas: {
+      name: 'Christmas',
+      value: 'Christmas',
+    },
   },
 })
 
@@ -60,7 +84,6 @@ function getNewJoke() {
   joke.fatal = false
   axios.get(`https://v2.jokeapi.dev/joke/${type.selected}?lang=${language.selected}&type=twopart`)
     .then(res => {
-      console.log(res.data);
       if (res.data.error) {
         type.selected = 'Any'
         language.selected = 'en'
@@ -79,7 +102,7 @@ function getNewJoke() {
       }
     })
     .catch(err => {
-      console.log(err);
+      console.log(err)
       if (err.code === 'ERR_BAD_REQUEST') {
         joke.error = `FATAL ERROR: ${err.response.data.additionalInfo}`
       }
@@ -147,36 +170,22 @@ function getLanguage() {
         {{ joke.answer }}
       </div>
 
-      <button
-        v-if="!joke.isCompleteJoke && !joke.fatal"
-        class="w-full bg-orange-400 font-bold rounded"
-        @click="completeJoke"
-      >
+      <CustomButton v-if="!joke.isCompleteJoke && !joke.fatal" @click="completeJoke">
         Tell me!
-      </button>
-      <button v-else v-if="!joke.fatal" class="w-full bg-orange-400 font-bold rounded" @click="newJoke">
+      </CustomButton>
+        
+      <CustomButton v-else v-if="!joke.fatal" @click="newJoke">
         New joke!
-      </button>
+      </CustomButton>
     </div>
 
     <!-- ///////////////// Config ///////////////// -->
 
     <div v-if="!joke.fatal">
-      <fieldset class="flex flex-row flex-wrap gap-5 m-auto w-80 border-2 p-3">
-        <legend class="px-3">Type</legend>
-        <select class="w-full border" v-model="type.selected" @change="getType">
-          <option v-for="line in type.types" :value="line">{{ line }}</option>
-        </select>
-      </fieldset>
 
-      <fieldset class="flex flex-row flex-wrap gap-5 m-auto w-80 border-2 p-3">
-        <legend class="px-3">Language</legend>
-        <select class="w-full border" @change="getLanguage" v-model="language.selected">
-          <option v-for="line in language.languages" :value="line.value">{{ line.name }}</option>
-        </select>
-      </fieldset>
+      <ConfigSelect v-model="language.selected" title="Language" :iterate="language.languages" @change="getLanguage" />
+      <ConfigSelect v-model="type.selected" title="Type of joke" :iterate="type.types" @change="getType" />
+
     </div>
   </div>
-  
-  <ConfigSelect />
 </template>
